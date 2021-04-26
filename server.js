@@ -14,32 +14,41 @@ admin.initializeApp({
   credential: admin.credential.cert(serviceAccount)
 });
 
-app.route('/push').post(function (req, res) {
-  const toToken = req.body.to;
-  const title = req.body.notification.title;
-  const body = req.body.notification.body;
-  PushMessage(toToken, title, body);
-  res.send("");
-});
-
-function PushMessage(toToken, title, body) {
+app.route('/pushmessage').post(function (req, res) {
+  console.log(req.body);
   var message = {
+    token: req.body.to,
     notification: {
-      "title": title,
-      "body": body
+      title: req.body.notification.title,
+      body: req.body.notification.body
     },
-    token: toToken
+    data: {
+      title: req.body.data.title,
+      message: req.body.data.message,
+    },
   };
 
-  admin.messaging().send(message)
-    .then((response) => {
-      return console.log('Successfully sent message:', response);
+  PushMessage(message)
+    .then(function (response) {
+      res.send(response);
     })
-    .catch((error) => {
-      return console.log('Error sending message:', error);
+    .catch(function (error) {
+      res.send(error);
     });
+});
+
+function PushMessage(message) {
+  return new Promise(function (resolve, reject) {
+    admin.messaging().send(message)
+      .then((response) => {
+        resolve(response);
+      })
+      .catch((error) => {
+        reject(error);
+      });
+  });
 }
 
 app.listen(port, () => {
-  console.log(`Example app listening at http://localhost:${port}`)
-})
+  console.log(`Server listening at http://localhost:${port}`)
+});
