@@ -1,7 +1,7 @@
 const express = require('express');
 const app = express();
-const port = 3000
-const serviceAccountKey = "./developer119-fcm-firebase-adminsdk-phska-6d0cdfd529.json"
+const port = 3000;
+const serviceAccountKey = "[fcm service key.json]";
 const bodyParser = require('body-parser');
 
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -14,21 +14,22 @@ admin.initializeApp({
   credential: admin.credential.cert(serviceAccount)
 });
 
-app.route('/pushmessage').post(function (req, res) {
+app.route('/message').post(function (req, res) {
   console.log(req.body);
-  var message = {
-    token: req.body.to,
-    notification: {
-      title: req.body.notification.title,
-      body: req.body.notification.body
-    },
+  const { body } = req;
+  const { notification, token, data } = body;
+  const { title, message } = data;
+
+  var json = {
+    token,
+    notification,
     data: {
-      title: req.body.data.title,
-      message: req.body.data.message,
+      title,
+      message,
     },
   };
 
-  PushMessage(message)
+  SendMessage(json)
     .then(function (response) {
       res.send(response);
     })
@@ -37,7 +38,7 @@ app.route('/pushmessage').post(function (req, res) {
     });
 });
 
-function PushMessage(message) {
+function SendMessage(message) {
   return new Promise(function (resolve, reject) {
     admin.messaging().send(message)
       .then((response) => {
